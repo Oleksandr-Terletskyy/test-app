@@ -1,0 +1,34 @@
+<form class="search-form" (ngSubmit)="onSubmit()">
+  <mat-form-field class="search-field" appearance="outline">
+    <mat-label>City</mat-label>
+    <input matInput [formControl]="control" [placeholder]="placeholder" />
+
+    <button
+      mat-icon-button
+      matSuffix
+      color="primary"
+      type="button"
+      (click)="onSubmit()"
+      [disabled]="control.invalid"
+    >
+      <mat-icon>search</mat-icon>
+    </button>
+
+    <button
+      mat-icon-button
+      matSuffix
+      color="warn"
+      type="button"
+      *ngIf="control.value"
+      (click)="onClearInput()"
+    >
+      <mat-icon>close</mat-icon>
+    </button>
+
+    <mat-error *ngIf="control.hasError('required')">City is required</mat-error>
+    <mat-error *ngIf="control.hasError('notFound')">City not found</mat-error>
+    <mat-error *ngIf="control.hasError('apiError')"
+      >Something went wrong, please try again</mat-error
+    >
+  </mat-form-field>
+</form>

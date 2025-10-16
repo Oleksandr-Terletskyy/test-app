@@ -1,0 +1,12 @@
+<div *ngIf="favoriteCities.length" class="favorite-cities-wrapper">
+  <h1 class="favorite-title">Favorite Cities:</h1>
+
+  <div *ngFor="let city of favoriteCities" class="favorite-city">
+    <weather-tabs
+      [currentWeather]="weatherMap[city]?.current ?? null"
+      [dailyForecast]="weatherMap[city]?.daily ?? []"
+      [showTitle]="true"
+      (removeCity)="removeCity($event)"
+    ></weather-tabs>
+  </div>
+</div>

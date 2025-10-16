@@ -1,0 +1,133 @@
+import { Component, inject, OnDestroy } from '@angular/core';
+import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { WeatherService } from './services/weather/weather.service';
+import { WeatherTabsComponent } from './components/weather-tabs/weather-tabs.component';
+import { FavoriteCitiesComponent } from './components/favorite-cities/favorite-cities.component';
+import { Subject, EMPTY, BehaviorSubject } from 'rxjs';
+import {
+  switchMap,
+  takeUntil,
+  catchError,
+  finalize,
+  map,
+} from 'rxjs/operators';
+import { FavoritesService } from './services/favorite-cities/favorite-cities.service';
+import { SearchInputComponent } from './components/search-input/search-input.component';
+import { CurrentWeather, DailyForecast, GeoResponseItem } from './models';
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressBarModule,
+    WeatherTabsComponent,
+    FavoriteCitiesComponent,
+    SearchInputComponent,
+  ],
+  templateUrl: './app.component.html',
+  styleUrl: './app.component.scss',
+})
+export class AppComponent implements OnDestroy {
+  private readonly weatherService: WeatherService = inject(WeatherService);
+  private readonly favoritesService = inject(FavoritesService);
+  private readonly destroy$ = new Subject<void>();
+  private readonly loadingSubject = new BehaviorSubject<boolean>(false);
+
+  protected readonly loading$ = this.loadingSubject.asObservable();
+
+  public cityControl: FormControl<string | null> = new FormControl(
+    '',
+    Validators.required
+  );
+  public currentWeather: CurrentWeather | null = null;
+  public dailyForecast: DailyForecast[] = [];
+
+  public searchCity(): void {
+    const city = this.cityControl.value?.trim() ?? null;
+    this.resetWeather();
+
+    if (!city) {
+      this.cityControl.setErrors({ required: true });
+      return;
+    }
+
+    this.setLoading(true);
+
+    this.weatherService
+      .getCityGeo(city)
+      .pipe(
+        takeUntil(this.destroy$),
+        switchMap((res) => {
+          if (Array.isArray(res) && res.length === 0) {
+            this.cityControl.setErrors({ notFound: true });
+            this.setLoading(false);
+            return EMPTY;
+          }
+
+          const geo = res as GeoResponseItem;
+
+          return this.weatherService
+            .getWeather(geo.lat, geo.lon, geo.name)
+            .pipe(
+              map((data) => ({ geo, data })),
+              catchError(() => {
+                this.cityControl.setErrors({ apiError: true });
+                this.setLoading(false);
+                return EMPTY;
+              })
+            );
+        }),
+        catchError(() => {
+          this.cityControl.setErrors({ apiError: true });
+          this.setLoading(false);
+          return EMPTY;
+        }),
+        finalize(() => this.setLoading(false))
+      )
+      .subscribe(({ geo, data }) => {
+        this.currentWeather = {
+          ...data.current,
+          name: geo.name,
+          country: geo.country,
+        };
+        this.dailyForecast = data.daily;
+      });
+  }
+
+  public addFavorite(): void {
+    if (this.currentWeather) {
+      this.favoritesService.addCity(this.currentWeather.name);
+    }
+  }
+
+  public removeFavorite(city: string): void {
+    this.favoritesService.removeCity(city);
+  }
+
+  public ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private resetWeather(): void {
+    this.currentWeather = null;
+    this.dailyForecast = [];
+    this.cityControl.setErrors(null);
+  }
+
+  private setLoading(isLoading: boolean): void {
+    this.loadingSubject.next(isLoading);
+  }
+}
