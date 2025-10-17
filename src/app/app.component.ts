@@ -1,4 +1,9 @@
-import { Component, inject, OnDestroy } from '@angular/core';
+import {
+  Component,
+  inject,
+  OnDestroy,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -38,6 +43,7 @@ import { CurrentWeather, DailyForecast, GeoResponseItem } from './models';
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent implements OnDestroy {
   private readonly weatherService: WeatherService = inject(WeatherService);

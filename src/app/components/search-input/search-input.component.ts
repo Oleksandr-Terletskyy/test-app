@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormControl } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -19,6 +19,7 @@ import { MatIconModule } from '@angular/material/icon';
   ],
   templateUrl: './search-input.component.html',
   styleUrls: ['./search-input.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SearchInputComponent {
   @Input() public control!: FormControl<string | null>;

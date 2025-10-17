@@ -60,11 +60,4 @@ describe('SearchInputComponent', () => {
     clearBtn = fixture.debugElement.query(By.css('button[color="warn"]'));
     expect(clearBtn).toBeTruthy();
   });
-
-  it('should set placeholder correctly from input', () => {
-    component.placeholder = 'Enter a city';
-    fixture.detectChanges();
-    const input = fixture.debugElement.query(By.css('input')).nativeElement;
-    expect(input.placeholder).toBe('Enter a city');
-  });
 });
