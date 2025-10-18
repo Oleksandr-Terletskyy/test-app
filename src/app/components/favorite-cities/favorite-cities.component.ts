@@ -1,10 +1,4 @@
-import {
-  Component,
-  inject,
-  OnInit,
-  OnDestroy,
-  ChangeDetectionStrategy,
-} from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { WeatherTabsComponent } from '../weather-tabs/weather-tabs.component';
 import { WeatherService } from '../../services/weather/weather.service';
@@ -20,7 +14,6 @@ import { CurrentWeather, DailyForecast, GeoResponseItem } from '../../models';
   imports: [CommonModule, WeatherTabsComponent, MatIconModule],
   templateUrl: './favorite-cities.component.html',
   styleUrls: ['./favorite-cities.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FavoriteCitiesComponent implements OnInit, OnDestroy {
   private readonly weatherService = inject(WeatherService);
