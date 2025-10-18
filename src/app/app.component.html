@@ -2,11 +2,7 @@
   <div class="weather-search-container">
     <search-input [control]="cityControl" (search)="searchCity()" />
 
-    <mat-progress-bar
-      *ngIf="loading$ | async"
-      mode="indeterminate"
-      color="primary"
-    />
+    <mat-progress-bar *ngIf="loading()" mode="indeterminate" color="primary" />
 
     <div *ngIf="currentWeather || dailyForecast.length">
       <h1 class="selected-city">

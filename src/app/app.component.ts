@@ -3,6 +3,7 @@ import {
   inject,
   OnDestroy,
   ChangeDetectionStrategy,
+  signal,
 } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -49,9 +50,8 @@ export class AppComponent implements OnDestroy {
   private readonly weatherService: WeatherService = inject(WeatherService);
   private readonly favoritesService = inject(FavoritesService);
   private readonly destroy$ = new Subject<void>();
-  private readonly loadingSubject = new BehaviorSubject<boolean>(false);
 
-  protected readonly loading$ = this.loadingSubject.asObservable();
+  protected loading = signal(false);
 
   public cityControl: FormControl<string | null> = new FormControl(
     '',
@@ -69,7 +69,7 @@ export class AppComponent implements OnDestroy {
       return;
     }
 
-    this.setLoading(true);
+    this.loading.set(true);
 
     this.weatherService
       .getCityGeo(city)
@@ -78,7 +78,7 @@ export class AppComponent implements OnDestroy {
         switchMap((res) => {
           if (Array.isArray(res) && res.length === 0) {
             this.cityControl.setErrors({ notFound: true });
-            this.setLoading(false);
+            this.loading.set(false);
             return EMPTY;
           }
 
@@ -90,17 +90,17 @@ export class AppComponent implements OnDestroy {
               map((data) => ({ geo, data })),
               catchError(() => {
                 this.cityControl.setErrors({ apiError: true });
-                this.setLoading(false);
+                this.loading.set(false);
                 return EMPTY;
               })
             );
         }),
         catchError(() => {
           this.cityControl.setErrors({ apiError: true });
-          this.setLoading(false);
+          this.loading.set(false);
           return EMPTY;
         }),
-        finalize(() => this.setLoading(false))
+        finalize(() => this.loading.set(false))
       )
       .subscribe(({ geo, data }) => {
         this.currentWeather = {
@@ -131,9 +131,5 @@ export class AppComponent implements OnDestroy {
     this.currentWeather = null;
     this.dailyForecast = [];
     this.cityControl.setErrors(null);
-  }
-
-  private setLoading(isLoading: boolean): void {
-    this.loadingSubject.next(isLoading);
   }
 }
