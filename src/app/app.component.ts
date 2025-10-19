@@ -4,6 +4,7 @@ import {
   OnDestroy,
   ChangeDetectionStrategy,
   signal,
+  WritableSignal,
 } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -51,7 +52,7 @@ export class AppComponent implements OnDestroy {
   private readonly favoritesService = inject(FavoritesService);
   private readonly destroy$ = new Subject<void>();
 
-  protected loading = signal(false);
+  protected loading: WritableSignal<boolean> = signal(false);
 
   public cityControl: FormControl<string | null> = new FormControl(
     '',
