@@ -1,9 +1,12 @@
 import {
   Component,
-  Input,
+  ChangeDetectionStrategy,
   Output,
   EventEmitter,
-  ChangeDetectionStrategy,
+  input,
+  output,
+  InputSignal,
+  OutputEmitterRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -20,19 +23,16 @@ import { CurrentWeather, DailyForecast } from '../../models';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WeatherTabsComponent {
-  @Input({ required: true })
-  public currentWeather: CurrentWeather | null = null;
+  public currentWeather: InputSignal<CurrentWeather | null> =
+    input.required<CurrentWeather | null>();
+  public dailyForecast: InputSignal<DailyForecast[]> =
+    input.required<DailyForecast[]>();
+    
+  public showTitle: InputSignal<boolean> = input(false);
 
-  @Input({ required: true })
-  public dailyForecast: DailyForecast[] = [];
-
-  @Input()
-  public showTitle = false;
-
-  @Output()
-  public removeCity = new EventEmitter<string>();
+  public removeCity: OutputEmitterRef<string> = output<string>();
 
   public onRemoveCity(): void {
-    this.removeCity.emit(this.currentWeather?.name);
+    this.removeCity.emit(this.currentWeather()!.name);
   }
 }

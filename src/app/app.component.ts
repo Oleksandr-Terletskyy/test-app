@@ -1,10 +1,10 @@
 import {
   Component,
   inject,
-  OnDestroy,
   ChangeDetectionStrategy,
   signal,
   WritableSignal,
+  DestroyRef,
 } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -16,17 +16,12 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { WeatherService } from './services/weather/weather.service';
 import { WeatherTabsComponent } from './components/weather-tabs/weather-tabs.component';
 import { FavoriteCitiesComponent } from './components/favorite-cities/favorite-cities.component';
-import { Subject, EMPTY, BehaviorSubject } from 'rxjs';
-import {
-  switchMap,
-  takeUntil,
-  catchError,
-  finalize,
-  map,
-} from 'rxjs/operators';
+import { EMPTY } from 'rxjs';
+import { switchMap, catchError, finalize, map } from 'rxjs/operators';
 import { FavoritesService } from './services/favorite-cities/favorite-cities.service';
 import { SearchInputComponent } from './components/search-input/search-input.component';
 import { CurrentWeather, DailyForecast, GeoResponseItem } from './models';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-root',
@@ -47,10 +42,10 @@ import { CurrentWeather, DailyForecast, GeoResponseItem } from './models';
   styleUrl: './app.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AppComponent implements OnDestroy {
+export class AppComponent {
   private readonly weatherService: WeatherService = inject(WeatherService);
   private readonly favoritesService = inject(FavoritesService);
-  private readonly destroy$ = new Subject<void>();
+  private readonly destroyRef = inject(DestroyRef);
 
   protected loading: WritableSignal<boolean> = signal(false);
 
@@ -75,7 +70,7 @@ export class AppComponent implements OnDestroy {
     this.weatherService
       .getCityGeo(city)
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         switchMap((res) => {
           if (Array.isArray(res) && res.length === 0) {
             this.cityControl.setErrors({ notFound: true });
@@ -121,11 +116,6 @@ export class AppComponent implements OnDestroy {
 
   public removeFavorite(city: string): void {
     this.favoritesService.removeCity(city);
-  }
-
-  public ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   private resetWeather(): void {

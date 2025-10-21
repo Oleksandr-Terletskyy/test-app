@@ -1,17 +1,17 @@
 <div class="weather-search-wrapper">
   <div class="weather-search-container">
     <search-input [control]="cityControl" (search)="searchCity()" />
-
-    <mat-progress-bar *ngIf="loading()" mode="indeterminate" color="primary" />
-
-    <div *ngIf="currentWeather || dailyForecast.length">
+    @if (loading()) {
+      <mat-progress-bar mode="indeterminate" color="primary" />
+    }
+    @if (currentWeather || dailyForecast.length > 0) {
       <h1 class="selected-city">
         {{ currentWeather?.name }}
         <mat-icon
           class="favorite-star"
           (click)="addFavorite()"
           matTooltip="Add to favorite cities"
-          >star_outline</mat-icon
+        >star_outline</mat-icon
         >
       </h1>
 
@@ -19,8 +19,7 @@
         [currentWeather]="currentWeather"
         [dailyForecast]="dailyForecast"
       />
-    </div>
-
+    }
     <favorite-cities />
   </div>
 </div>

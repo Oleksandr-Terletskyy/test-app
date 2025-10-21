@@ -1,9 +1,12 @@
 import {
   Component,
-  Input,
   Output,
   EventEmitter,
   ChangeDetectionStrategy,
+  input,
+  output,
+  OutputEmitterRef,
+  InputSignal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormControl, FormsModule } from '@angular/forms';
@@ -29,13 +32,15 @@ import { MatIconModule } from '@angular/material/icon';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SearchInputComponent {
-  @Input() public control!: FormControl<string | null>;
-  @Input() public placeholder = 'Enter city name';
-  @Output() public search = new EventEmitter<void>();
+  public control: InputSignal<FormControl<string | null>> =
+    input.required<FormControl<string | null>>();
+  public placeholder: InputSignal<string> = input('Enter city name');
+
+  public search: OutputEmitterRef<void> = output<void>();
 
   public onClearInput(): void {
-    this.control.setValue('');
-    this.control.setErrors(null);
+    this.control().setValue('');
+    this.control().setErrors(null);
   }
 
   public onSubmit(): void {

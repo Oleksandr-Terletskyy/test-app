@@ -1,12 +1,13 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, OnInit, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { WeatherTabsComponent } from '../weather-tabs/weather-tabs.component';
 import { WeatherService } from '../../services/weather/weather.service';
-import { Subject, EMPTY } from 'rxjs';
-import { switchMap, takeUntil, catchError, map } from 'rxjs/operators';
+import { EMPTY } from 'rxjs';
+import { switchMap, catchError, map } from 'rxjs/operators';
 import { MatIconModule } from '@angular/material/icon';
 import { FavoritesService } from '../../services/favorite-cities/favorite-cities.service';
 import { CurrentWeather, DailyForecast, GeoResponseItem } from '../../models';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'favorite-cities',
@@ -15,10 +16,10 @@ import { CurrentWeather, DailyForecast, GeoResponseItem } from '../../models';
   templateUrl: './favorite-cities.component.html',
   styleUrls: ['./favorite-cities.component.scss'],
 })
-export class FavoriteCitiesComponent implements OnInit, OnDestroy {
+export class FavoriteCitiesComponent implements OnInit {
   private readonly weatherService = inject(WeatherService);
   private readonly favoritesService = inject(FavoritesService);
-  private readonly destroy$ = new Subject<void>();
+  private readonly destroyRef = inject(DestroyRef);
 
   public favoriteCities: string[] = [];
   public weatherMap: Record<
@@ -29,7 +30,7 @@ export class FavoriteCitiesComponent implements OnInit, OnDestroy {
 
   public ngOnInit(): void {
     this.favoritesService.favorites$
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((cities) => {
         this.favoriteCities = cities;
         cities.forEach((city) => {
@@ -52,7 +53,7 @@ export class FavoriteCitiesComponent implements OnInit, OnDestroy {
     this.weatherService
       .getCityGeo(city)
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
         switchMap((res) => {
           if (Array.isArray(res) && res.length === 0) {
             this.weatherMap[city] = { current: null, daily: [] };
@@ -65,7 +66,7 @@ export class FavoriteCitiesComponent implements OnInit, OnDestroy {
           return this.weatherService
             .getWeather(geo.lat, geo.lon, geo.name)
             .pipe(
-              takeUntil(this.destroy$),
+              takeUntilDestroyed(this.destroyRef),
               catchError(() => {
                 this.weatherMap[city] = { current: null, daily: [] };
                 this.isLoadingMap[city] = false;
@@ -90,10 +91,5 @@ export class FavoriteCitiesComponent implements OnInit, OnDestroy {
 
   public removeCity(city: string): void {
     this.favoritesService.removeCity(city);
-  }
-
-  public ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 }
